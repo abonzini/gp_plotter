@@ -1,0 +1,4 @@
+float32 noise
+float32 R
+---
+bool succ
