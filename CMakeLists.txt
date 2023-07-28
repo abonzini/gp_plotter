@@ -7,10 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   message_generation
   controller_manager
-  roslaunch
 )
-
-roslaunch_add_file_check(launch)
 
 add_service_files(
   FILES
@@ -37,6 +34,3 @@ catkin_package(
 catkin_install_python(PROGRAMS
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
-
-install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-  PATTERN "setup_assistant.launch" EXCLUDE)
