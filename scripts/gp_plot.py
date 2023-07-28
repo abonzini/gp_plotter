@@ -130,10 +130,10 @@ def main(world):
     mesh.scale.x = 1
     mesh.scale.y = 1
     mesh.scale.z = 1
-    mesh.pose.orientation.x = 0.0;
-    mesh.pose.orientation.y = 0.0;
-    mesh.pose.orientation.z = 0.0;
-    mesh.pose.orientation.w = 1.0;
+    mesh.pose.orientation.x = 0.0
+    mesh.pose.orientation.y = 0.0
+    mesh.pose.orientation.z = 0.0
+    mesh.pose.orientation.w = 1.0
     mesh.type = 11 # triangle list
     print("Created mesh publisher")
 
@@ -150,8 +150,12 @@ def main(world):
             if len(next_x)>0:
                 the_GP.AddX(next_x)
                 the_GP.Y = np.vstack((the_GP.Y, next_y))
+                print("Points added, now GP has", len(the_GP._X.Values),"points")
+                print("And", len(the_GP.Y),"values")
                 next_x = np.empty((0,3))
                 next_y = np.empty((0,1))
+                print("K size:", the_GP.K.shape)
+                print("Kx size:", the_GP.Kx.shape)
             mu = np.copy(the_GP.mu)
             mu = mu.reshape(mesh_shape)
             
