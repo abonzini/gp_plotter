@@ -73,7 +73,7 @@ def add_point(req):
     next_y = np.vstack((next_y, new_Y))
     global new_data 
     new_data = True
-    print("Point", new_X, "added to queue")
+    print("Point", new_X, "added to queue with a prior value of", new_Y)
     global prior_ready
     global hyp_ready
     if prior_ready and hyp_ready:
@@ -148,6 +148,7 @@ def main(world):
             global next_x
             global next_y
             if len(next_x)>0:
+                print("Buffer of new input/output is not empty! Inputs:", next_x,"Outputs:",next_y)
                 the_GP.AddX(next_x)
                 the_GP.Y = np.vstack((the_GP.Y, next_y))
                 print("Points added, now GP has", len(the_GP._X.Values),"points")
