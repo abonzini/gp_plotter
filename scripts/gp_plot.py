@@ -148,11 +148,12 @@ def main(world):
             global next_x
             global next_y
             if len(next_x)>0:
-                print("Buffer of new input/output is not empty! Inputs:", next_x,"Outputs:",next_y)
-                the_GP.AddX(next_x)
-                the_GP.Y = np.vstack((the_GP.Y, next_y))
-                print("Points added, now GP has", len(the_GP._X.Values),"points")
-                print("And", len(the_GP.Y),"values")
+                n = min(len(next_x),len(next_y)) # I check immediately the buffer
+                print("Buffer of new input/output is not empty! Inputs:", next_x,"Outputs:",next_y.ravel())
+                the_GP.AddX(next_x[:n, :])
+                the_GP.Y = np.vstack((the_GP.Y, next_y[:n, :]))
+                print("Points added, now GP has these points:", the_GP._X.Values)
+                print("And these values:", the_GP.Y.ravel(), "Y size:", len(the_GP.Y))
                 next_x = np.empty((0,3))
                 next_y = np.empty((0,1))
                 print("K size:", the_GP.K.shape)
