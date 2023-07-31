@@ -11,14 +11,8 @@ import math
 from gp_plotter.srv import SetPrior, SetPriorResponse, SetHyp, SetHypResponse, AddPoint, AddPointResponse
 from gp_plotter.GPutil import GPX, GP
 
-import time
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from skimage import measure
 
-import trimesh
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
 
