@@ -5,11 +5,11 @@ import sys
 import rospy
 import tf
 import numpy as np
-from std_msgs.msg import *
+from std_msgs.msg import String, Empty
 import math
 
 from gp_plotter.srv import SetPrior, SetPriorResponse, SetHyp, SetHypResponse, AddPoint, AddPointResponse
-from gp_plotter.GPutil import GPX, GP
+from gp_plotter.GPutil import GPX, GP, TSPCov3D, SECov
 
 from skimage import measure
 
@@ -74,7 +74,15 @@ def add_point(req):
         return AddPointResponse(True)
     return AddPointResponse(False)
 
-def cov_to_rgba(covs, min_cov = 0, max_cov = 1, log = True):
+def clone_mesh(req):
+    global clone_reference_frame
+    clone_reference_frame = req.data
+
+def reset_request(req):
+    global reset_requested
+    reset_requested = True
+
+def cov_to_rgba(covs, min_cov = 0, max_cov = 1, log = True, alpha = 1):
     rgba = []
     if log:
         min_cov = math.log(min_cov)
@@ -85,38 +93,34 @@ def cov_to_rgba(covs, min_cov = 0, max_cov = 1, log = True):
         tf_cov = max(min(cov[0], max_cov), min_cov)
         tf_cov /= max_cov
         color.g = 0
-        color.a = 1
+        color.a = alpha
         color.r = tf_cov
         color.b = 1-tf_cov
         rgba += [color]
     return rgba
 
-the_GP = GP()
+def ResetEverything():
+    global the_GP, new_data, prior_ready, hyp_ready, mesh_shape, d, h, center, spacing, ax, next_x, next_y, clone_reference_frame, reset_requested
+    reset_requested = False
+    the_GP = GP()
+    new_data = False
+    prior_ready = False
+    hyp_ready = False
+    mesh_shape = None
+    d = None
+    h = None
+    center = None
+    spacing = None
+    clone_reference_frame = None
+    ax = None
+    next_x = np.empty((0,3))
+    next_y = np.empty((0,1))
 
-new_data = False
-prior_ready = False
-hyp_ready = False
-
-mesh_shape = None
-d = None
-h = None
-center = None
-spacing = None
-ax = None
-next_x = np.empty((0,3))
-next_y = np.empty((0,1))
 def main(world):
-    global the_GP, new_data, prior_ready, hyp_ready, mesh_shape, d, h, center, spacing, ax
-    rospy.init_node("GPPlotter")
+    global the_GP, new_data, prior_ready, hyp_ready, mesh_shape, d, h, center, spacing, ax, clone_reference_frame, reset_requested
 
-    serv_prior = rospy.Service('set_prior', SetPrior, handle_set_prior)
-    serv_hyp = rospy.Service('set_hyp', SetHyp, handle_set_hyp)
-    serv_point = rospy.Service('add_point_gp_service', AddPoint, add_point)
-    print("Now hosting services")
-
-    pub = rospy.Publisher('mesh_publish', Marker, queue_size=10)
+    mesh_pub = rospy.Publisher('mesh_publish', Marker, queue_size=10)
     mesh = Marker()
-    mesh.header.frame_id = world
     mesh.color.r = 0
     mesh.color.g = 1
     mesh.color.b = 0
@@ -130,14 +134,25 @@ def main(world):
     mesh.pose.orientation.w = 1.0
     mesh.type = 11 # triangle list
     print("Created mesh publisher")
-
+    clone_pub = rospy.Publisher('clone_mesh_publish', Marker, queue_size=10)
+    print("Created clone publisher")
+    
+    # d and h specify the max size of the plotting box (30 cm to each side, d is diameter (side) and h is height)
     d = 0.6
     h = 0.6
+    # Noise hyp defines noise of points. If low noise can fit points better and get sharp edges but may also break reconstruction
+    # High noise fits curve always but always rounded
     the_GP.noise = 0.05 # Default noise (can be overwritten)
-    the_GP.hyp = [0.30] # R hyperparameter (can be overwritten)
+    # TSP model has no hyperparameter, only maximum object size ([0.3] default means max size of 30cm)
+    the_GP.model = TSPCov3D
+    the_GP.hyp = [0.30] # max size for tsp
+    # TO TRY SQUARE EXPONENTIAL MODEL UNCOMMENT LINES
+    # Hyperparameters: default is 0.1, larger values means a rounder shape, lower value fits better but also points are less connected overall
+    #the_GP.model = SECov
+    #the_GP.hyp = [1,0.1] # SE has one hyp (the other one shoudl stay at 0), 
     hyp_ready=True
     something = False
-    while not rospy.is_shutdown():
+    while not rospy.is_shutdown() and not reset_requested:
         if new_data and prior_ready and hyp_ready:
             global next_x
             global next_y
@@ -182,7 +197,13 @@ def main(world):
             print("New iteration plotted!")
         if something:
             mesh.header.stamp = rospy.Time.now()
-            pub.publish(mesh)
+            mesh.header.frame_id = world
+            mesh_pub.publish(mesh)
+            if clone_reference_frame is not None:
+                mesh.header.stamp = rospy.Time.now()
+                mesh.header.frame_id = clone_reference_frame
+                clone_pub.publish(mesh)
+
         rospy.sleep(0.05)
 
 if __name__ == "__main__":
@@ -193,4 +214,16 @@ if __name__ == "__main__":
         print('WARNING: The mesh has it\'s default world origin into the tf parent called \"world\"')
         print('Call the code gp_plot.py REFERENCE_TF to set another parent reference')
         world = 'world'
-    main(world)
+    # Set ros stuff
+    rospy.init_node("GPPlotter")
+
+    serv_prior = rospy.Service('set_prior', SetPrior, handle_set_prior)
+    serv_hyp = rospy.Service('set_hyp', SetHyp, handle_set_hyp)
+    serv_point = rospy.Service('add_point_gp_service', AddPoint, add_point)
+    serv_clone_mesh = rospy.Service('clone_mesh', String, clone_mesh)
+    reset_service = rospy.Service('reset_GP', Empty, reset_request)
+    print("Now hosting services")
+    #Start experiment
+    while not rospy.is_shutdown():
+        ResetEverything()
+        main(world)
