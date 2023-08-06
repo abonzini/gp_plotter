@@ -14,6 +14,8 @@ add_service_files(
   AddPoint.srv
   SetHyp.srv
   SetPrior.srv
+  CloneMesh.srv
+  ResetGP.srv
 )
 
 catkin_python_setup()

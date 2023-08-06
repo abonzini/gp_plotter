@@ -133,7 +133,7 @@ class GP:
     @model.setter
     def model(self, value):
         self.ResetAll()
-        self.model = value
+        self._model = value
     #endregion
     # region hyp
     _hyp = None
