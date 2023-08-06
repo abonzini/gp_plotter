@@ -8,7 +8,7 @@ import numpy as np
 from std_msgs.msg import String, Empty
 import math
 
-from gp_plotter.srv import SetPrior, SetPriorResponse, SetHyp, SetHypResponse, AddPoint, AddPointResponse
+from gp_plotter.srv import SetPrior, SetPriorResponse, SetHyp, SetHypResponse, AddPoint, AddPointResponse, CloneMesh, CloneMeshResponse, ResetGP, ResetGPResponse
 from gp_plotter.GPutil import GPX, GP, TSPCov3D, SECov
 
 from skimage import measure
@@ -77,10 +77,12 @@ def add_point(req):
 def clone_mesh(req):
     global clone_reference_frame
     clone_reference_frame = req.data
+    return CloneMeshResponse(True)
 
 def reset_request(req):
     global reset_requested
     reset_requested = True
+    return ResetGPResponse(True)
 
 def cov_to_rgba(covs, min_cov = 0, max_cov = 1, log = True, alpha = 1):
     rgba = []
@@ -220,8 +222,8 @@ if __name__ == "__main__":
     serv_prior = rospy.Service('set_prior', SetPrior, handle_set_prior)
     serv_hyp = rospy.Service('set_hyp', SetHyp, handle_set_hyp)
     serv_point = rospy.Service('add_point_gp_service', AddPoint, add_point)
-    serv_clone_mesh = rospy.Service('clone_mesh', String, clone_mesh)
-    reset_service = rospy.Service('reset_GP', Empty, reset_request)
+    serv_clone_mesh = rospy.Service('clone_mesh', CloneMesh, clone_mesh)
+    reset_service = rospy.Service('reset_GP', ResetGP, reset_request)
     print("Now hosting services")
     #Start experiment
     while not rospy.is_shutdown():
