@@ -35,14 +35,14 @@ def CylindricalDistance(x1, x2):
     dist2 += (x1[2]-x2[2])**2
     return math.sqrt(dist2)
 
-def TSPCov3D(dist, hyp): # 3D Thin Plate Kernel function for a distance
+def TSPCov3D(self, dist, hyp): # 3D Thin Plate Kernel function for a distance
     dist /= hyp[0]
     if dist>1:
         return 0
     k = 2*(dist**3) - 3*(dist**2) + 1
     return k
 
-def SECov(dist, hyp):
+def SECov(self, dist, hyp):
     exp = dist*dist/(2*hyp[1]*hyp[1])
     exp = hyp[0] * math.exp(-exp)
     return exp
