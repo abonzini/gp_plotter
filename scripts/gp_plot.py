@@ -146,12 +146,7 @@ def main(world):
     # High noise fits curve always but always rounded
     the_GP.noise = 0.05 # Default noise (can be overwritten)
     # TSP model has no hyperparameter, only maximum object size ([0.3] default means max size of 30cm)
-    the_GP.model = TSPCov3D
     the_GP.hyp = [0.30] # max size for tsp
-    # TO TRY SQUARE EXPONENTIAL MODEL UNCOMMENT LINES
-    # Hyperparameters: default is 0.1, larger values means a rounder shape, lower value fits better but also points are less connected overall
-    #the_GP.model = SECov
-    #the_GP.hyp = [1,0.1] # SE has one hyp (the other one shoudl stay at 0), 
     hyp_ready=True
     something = False
     while not rospy.is_shutdown() and not reset_requested:

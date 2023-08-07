@@ -308,7 +308,7 @@ class GP:
             if self._Xx.length()>0:
                 if self._simpleKxx:
                     n = self._Xx.length()
-                    self._Kxx = self.model(0,self.hyp) * np.ones((n,n))
+                    self._Kxx = TSPCov3D(0,self.hyp) * np.ones((n,n))
                 else:
                     self._Kxx = self.AutoKernel(self._Xx)
         return self._Kxx
@@ -436,13 +436,13 @@ class GP:
         for level in range(sizeK): # Level between 0 and size-1
             for i in range(sizeK-level): # row between 0 and sizeK-level
                 j = i + level
-                k = CombineTables(input_table, i, j, self.model, distance_function, self.hyp, mode = mode)
+                k = CombineTables(input_table, i, j, TSPCov3D, distance_function, self.hyp, mode = mode)
                 if rescaling_table is not None: # If i need to do rescaling, will read (and fill, if needed) the rescaling table
                     if rescaling_table[i] <= 0: # If yet empty, i know I am in the diagonal so it is easy to fill (since firt pass i=j always)
                         rescaling_table[i] = math.sqrt(k)
                     k /= rescaling_table[i]
                     k /= rescaling_table[j]
-                    k *= self.model(0,self.hyp)
+                    k *= TSPCov3D(0,self.hyp)
                 K[i][j] = K[j][i] = k
         return K
 
@@ -472,15 +472,15 @@ class GP:
 
         for i in range(n1): # row between 0 and n1
             for j in range(n2):
-                k = CombineTables(input_table1, i, j, self.model, distance_function, self.hyp, mode = mode, Table2=input_table2)
+                k = CombineTables(input_table1, i, j, TSPCov3D, distance_function, self.hyp, mode = mode, Table2=input_table2)
                 if rescaling_table1 is not None and rescaling_table2 is not None: # If i need to do rescaling, will read (and fill, if needed) the rescaling table
                     if rescaling_table1[i] <= 0:
-                        rescaling_table1[i] = math.sqrt(CombineTables(input_table1, i, i, self.model, distance_function, self.hyp, mode = mode))
+                        rescaling_table1[i] = math.sqrt(CombineTables(input_table1, i, i, TSPCov3D, distance_function, self.hyp, mode = mode))
                     if rescaling_table2[j] <= 0:
-                        rescaling_table2[j] = math.sqrt(CombineTables(input_table2, j, j, self.model, distance_function, self.hyp, mode = mode))
+                        rescaling_table2[j] = math.sqrt(CombineTables(input_table2, j, j, TSPCov3D, distance_function, self.hyp, mode = mode))
                     k /= rescaling_table1[i]
                     k /= rescaling_table2[j]
-                    k *= self.model(0,self.hyp)
+                    k *= TSPCov3D(0,self.hyp)
                 K[i][j] = k
         return K
 
